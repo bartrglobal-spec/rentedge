@@ -1,409 +1,388 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-type ProfileState = {
-  income: string
-  additionalIncome: string
-
-  employment: string
-  duration: string
-
-  occupants: string
-  pets: string
-  smoking: string
-
-  leasePreference: string
-  moveTimeline: string
-
-  depositReady: boolean
-  idReady: boolean
-  payslipReady: boolean
-  bankStatementsReady: boolean
-  referencesReady: boolean
-  guarantorAvailable: boolean
-
-  creditIssues: string
-  evictionHistory: string
-}
-
-type SelectionProps = {
-  title: string
-  value: string
-  options: string[]
-  onSelect: (value: string) => void
-}
-
-type ToggleProps = {
-  label: string
-  description: string
-  value: boolean
-  onChange: () => void
-}
-
-const initialProfile: ProfileState = {
-  income: '',
-  additionalIncome: '',
-
-  employment: '',
-  duration: '',
-
-  occupants: '',
-  pets: '',
-  smoking: '',
-
-  leasePreference: '',
-  moveTimeline: '',
-
-  depositReady: false,
-  idReady: false,
-  payslipReady: false,
-  bankStatementsReady: false,
-  referencesReady: false,
-  guarantorAvailable: false,
-
-  creditIssues: '',
-  evictionHistory: '',
-}
-
 export default function ProfilePage() {
-  const router = useRouter()
 
-  const [profile, setProfile] =
-    useState<ProfileState>(initialProfile)
+const router = useRouter()
 
-  const [saved, setSaved] =
-    useState(false)
+const [saved,setSaved]=
+useState(false)
 
-  useEffect(() => {
+const [profile,setProfile]=
+useState({
 
-    const existing =
-      localStorage.getItem(
-        'rentedge_renter'
-      ) ||
-      localStorage.getItem(
-        'rentedge_profile'
-      )
+income:'',
 
-    if (!existing) return
+additionalIncome:'',
 
-    try {
+employment:'',
 
-      const parsed =
-        JSON.parse(existing)
+duration:'',
 
-      setProfile(prev => ({
-        ...prev,
-        ...parsed,
-      }))
+occupants:'1',
 
-    } catch {
+depositReady:false,
 
-      console.log(
-        'Profile load failed'
-      )
+idReady:false,
 
-    }
+payslipReady:false,
 
-  }, [])
+bankStatementsReady:false,
 
-  const update = <
-    K extends keyof ProfileState
-  >(
-    field: K,
-    value: ProfileState[K]
-  ) => {
+referencesReady:false,
 
-    setProfile(prev => ({
-      ...prev,
-      [field]: value,
-    }))
+guarantorAvailable:false,
 
-  }
+evictionHistory:'No'
 
-  const completionScore =
-    useMemo(() => {
+})
 
-      let total = 0
+useEffect(()=>{
 
-      if (profile.income) total++
-      if (profile.employment) total++
-      if (profile.duration) total++
-      if (profile.occupants) total++
-      if (profile.pets !== '') total++
-      if (profile.smoking !== '') total++
-      if (profile.moveTimeline) total++
-      if (profile.leasePreference) total++
-      if (profile.depositReady) total++
-      if (profile.idReady) total++
-      if (profile.payslipReady) total++
-      if (profile.bankStatementsReady) total++
-      if (profile.referencesReady) total++
+const existing=
+localStorage.getItem(
+'rentedge_profile'
+)
 
-      return Math.min(
-        100,
-        Math.round(
-          (total / 13) * 100
-        )
-      )
+if(!existing) return
 
-    }, [profile])
+try{
 
-  const isComplete =
-    profile.income &&
-    profile.employment &&
-    profile.duration &&
-    profile.occupants &&
-    profile.pets !== '' &&
-    profile.smoking !== '' &&
-    profile.moveTimeline !== ''
+setProfile(prev=>({
 
-  const saveProfile = () => {
+...prev,
 
-    const normalized = {
+...JSON.parse(existing)
 
-      ...profile,
+}))
 
-      income:
-        Number(
-          profile.income || 0
-        ),
+}catch{}
 
-      additionalIncome:
-        Number(
-          profile.additionalIncome || 0
-        ),
+},[])
 
-      occupants:
-        Number(
-          profile.occupants || 1
-        ),
+function update(
+field:string,
+value:any
+){
 
-      pets:
-        profile.pets === 'Yes',
+setProfile(prev=>({
 
-      smoking:
-        profile.smoking === 'Yes',
+...prev,
 
-      deposit:
-        profile.depositReady
-          ? 'full'
-          : 'none',
+[field]:value
 
-      payslip:
-        profile.payslipReady,
+}))
 
-    }
+}
 
-    localStorage.setItem(
-      'rentedge_renter',
-      JSON.stringify(normalized)
-    )
+const complete=
 
-    localStorage.setItem(
-      'rentedge_profile',
-      JSON.stringify(normalized)
-    )
+profile.income &&
+profile.employment &&
+profile.duration &&
+profile.occupants
 
-    localStorage.setItem(
-      'rentedge_profile_complete',
-      'true'
-    )
+function save(){
 
-    setSaved(true)
+const normalized={
 
-    setTimeout(() => {
+...profile,
 
-      setSaved(false)
+income:Number(
+profile.income
+),
 
-      router.push('/')
+additionalIncome:Number(
+profile.additionalIncome
+),
 
-    }, 1000)
+occupants:Number(
+profile.occupants
+)
 
-  }
+}
 
-  return (
+localStorage.setItem(
+'rentedge_profile',
+JSON.stringify(
+normalized
+)
+)
 
-<div className="space-y-5">
+localStorage.setItem(
+'rentedge_renter',
+JSON.stringify(
+normalized
+)
+)
 
-<section className="card space-y-5">
+localStorage.setItem(
+'rentedge_profile_complete',
+'true'
+)
 
-<SelectionGrid
-title="Employment"
+setSaved(true)
+
+setTimeout(()=>{
+
+router.push('/')
+
+},800)
+
+}
+
+return(
+
+<div className="space-y-6">
+
+<div>
+
+<div className="text-[11px] uppercase tracking-[0.3em] text-blue-200/50">
+
+Renter Profile
+
+</div>
+
+<h1 className="mt-3 text-3xl font-semibold">
+
+Build your renter identity
+
+</h1>
+
+</div>
+
+<div className="card space-y-4">
+
+<input
+className="input"
+placeholder="Monthly income"
+value={profile.income}
+onChange={e=>
+update(
+'income',
+e.target.value
+)}
+/>
+
+<input
+className="input"
+placeholder="Additional income"
+value={profile.additionalIncome}
+onChange={e=>
+update(
+'additionalIncome',
+e.target.value
+)}
+/>
+
+<input
+className="input"
+placeholder="Occupants"
+value={profile.occupants}
+onChange={e=>
+update(
+'occupants',
+e.target.value
+)}
+/>
+
+<select
+className="input"
 value={profile.employment}
-options={[
-'Employed',
-'Self-employed',
-'Student',
-'Retired',
-'Unemployed',
-]}
-onSelect={(value:string)=>
+onChange={e=>
 update(
 'employment',
-value
-)
-}
-/>
+e.target.value
+)}
+>
 
-<SelectionGrid
-title="Current income stability"
+<option value="">
+Employment
+</option>
+
+<option>
+Employed
+</option>
+
+<option>
+Self-employed
+</option>
+
+<option>
+Student
+</option>
+
+<option>
+Retired
+</option>
+
+</select>
+
+<select
+className="input"
 value={profile.duration}
-options={[
-'Less than 6 months',
-'6-12 months',
-'1-2 years',
-'2+ years',
-]}
-onSelect={(value:string)=>
+onChange={e=>
 update(
 'duration',
-value
-)
+e.target.value
+)}
+>
+
+<option value="">
+Employment duration
+</option>
+
+<option>
+Less than 6 months
+</option>
+
+<option>
+6-12 months
+</option>
+
+<option>
+1-2 years
+</option>
+
+<option>
+2+ years
+</option>
+
+</select>
+
+<Toggle
+label="Deposit Ready"
+value={
+profile.depositReady
 }
+onClick={()=>
+update(
+'depositReady',
+!profile.depositReady
+)}
 />
 
-<SelectionRow
-title="Pets"
-value={profile.pets}
-options={['Yes','No']}
-onSelect={(value:string)=>
-update(
-'pets',
-value
-)
+<Toggle
+label="ID Ready"
+value={
+profile.idReady
 }
+onClick={()=>
+update(
+'idReady',
+!profile.idReady
+)}
 />
 
-<SelectionRow
-title="Smoking"
-value={profile.smoking}
-options={['Yes','No']}
-onSelect={(value:string)=>
-update(
-'smoking',
-value
-)
+<Toggle
+label="Payslip Ready"
+value={
+profile.payslipReady
 }
+onClick={()=>
+update(
+'payslipReady',
+!profile.payslipReady
+)}
+/>
+
+<Toggle
+label="Bank Statements"
+value={
+profile.bankStatementsReady
+}
+onClick={()=>
+update(
+'bankStatementsReady',
+!profile.bankStatementsReady
+)}
+/>
+
+<Toggle
+label="References"
+value={
+profile.referencesReady
+}
+onClick={()=>
+update(
+'referencesReady',
+!profile.referencesReady
+)}
+/>
+
+<Toggle
+label="Guarantor"
+value={
+profile.guarantorAvailable
+}
+onClick={()=>
+update(
+'guarantorAvailable',
+!profile.guarantorAvailable
+)}
 />
 
 <button
-onClick={saveProfile}
-disabled={!isComplete}
-className={`btn-primary ${
-!isComplete
-? 'opacity-40'
-: ''
+
+disabled={!complete}
+
+onClick={save}
+
+className={`btn-primary w-full ${
+!complete
+?'opacity-40'
+:''
 }`}
+
 >
 
 {saved
-? 'Application profile saved'
-: 'Save application profile'}
+?'Saving...'
+:'Save renter profile'}
 
 </button>
 
-</section>
-
-</div>
-
-  )
-
-}
-
-function SelectionGrid({
-title,
-value,
-options,
-onSelect,
-}:SelectionProps){
-
-return(
-
-<div className="space-y-3">
-
-<p className="label">
-{title}
-</p>
-
-<div className="grid grid-cols-2 gap-2">
-
-{options.map(item=>(
-
-<button
-key={item}
-type="button"
-onClick={()=>
-onSelect(item)
-}
-className={`rounded-2xl border px-4 py-3 text-sm ${
-value===item
-? 'border-[var(--accent-border)] bg-[var(--accent-soft)] text-white'
-: 'border-[var(--border-soft)] bg-white/[0.02]'
-}`}
->
-
-{item}
-
-</button>
-
-))}
-
 </div>
 
 </div>
 
-)
-
-}
-
-function SelectionRow(
-props:SelectionProps
-){
-
-return(
-<SelectionGrid
-{...props}
-/>
 )
 
 }
 
 function Toggle({
 label,
-description,
 value,
-onChange,
-}:ToggleProps){
+onClick
+}:any){
 
 return(
 
 <button
+
 type="button"
-onClick={onChange}
-className="flex w-full justify-between rounded-2xl border p-4"
+
+onClick={onClick}
+
+className="flex w-full items-center justify-between rounded-2xl border border-white/10 p-4"
+
 >
 
-<div>
+<span>
 
-<p>
 {label}
-</p>
 
-<p>
-{description}
-</p>
+</span>
 
-</div>
-
-<div>
+<span>
 
 {value
-? 'ON'
-: 'OFF'}
+?'ON'
+:'OFF'}
 
-</div>
+</span>
 
 </button>
 
