@@ -318,38 +318,50 @@ export function evaluatePressure(
   }
 
   // --------------------------------------------------
-  // COMPETITION
-  // --------------------------------------------------
+// COMPETITION
+// --------------------------------------------------
 
-  if (
-    applicantPool === "extreme"
-  ) {
-    pressureScore += 3
+if (
+  applicantPool === "elite"
+) {
 
-    pressureReasons.push(
-      "competition for this property is extremely high"
-    )
+  pressureScore += 3
 
-    risks.push(
-      "stronger competing applicants are likely"
-    )
-  } else if (
-    applicantPool === "high"
-  ) {
-    pressureScore += 2
+  pressureReasons.push(
+    "competition for this property is extremely high"
+  )
 
-    pressureReasons.push(
-      "competition is higher than normal"
-    )
-  } else if (
-    applicantPool === "low"
-  ) {
-    pressureScore -= 1
+  risks.push(
+    "stronger competing applicants are likely"
+  )
 
-    advantages.push(
-      "reduced competition improves flexibility"
-    )
-  }
+} else if (
+
+  applicantPool === "affluent" ||
+
+  applicantPool === "professional"
+
+) {
+
+  pressureScore += 2
+
+  pressureReasons.push(
+    "competition is higher than normal"
+  )
+
+} else if (
+
+  applicantPool === "volume-driven"
+
+) {
+
+  pressureScore -= 1
+
+  advantages.push(
+    "reduced competition improves flexibility"
+  )
+
+}
 
   // --------------------------------------------------
   // PROPERTY CLASS
