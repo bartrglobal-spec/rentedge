@@ -1,26 +1,429 @@
-@import "tailwindcss";
+/* TAILWIND */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+
+  width: 100%;
+  min-height: 100%;
+
+  background: #04070d;
+  color: #f3f7ff;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  text-rendering: optimizeLegibility;
+
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+/* HIDE SCROLLBAR */
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+.app-content::-webkit-scrollbar {
+  display: none;
+}
+
+html,
+body,
+.app-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* =========================================================
+   DESIGN TOKENS
+========================================================= */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* BACKGROUNDS */
+  --bg-primary: #04070d;
+  --bg-secondary: #0a101a;
+  --bg-surface: #0f1622;
+  --bg-surface-elevated: #131c2a;
+  --bg-soft: rgba(255, 255, 255, 0.03);
+
+  /* TEXT */
+  --text-primary: #f5f7fb;
+  --text-secondary: rgba(245, 247, 251, 0.72);
+  --text-muted: rgba(245, 247, 251, 0.42);
+
+  /* BORDERS */
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.1);
+
+  /* ACCENT */
+  --accent-primary: #4c8dff;
+  --accent-soft: rgba(76, 141, 255, 0.12);
+  --accent-border: rgba(76, 141, 255, 0.24);
+
+  /* STATUS */
+  --success: #49c27b;
+  --warning: #f1b94a;
+  --danger: #ef6b6b;
+
+  /* SHADOWS */
+  --shadow-surface:
+    0 10px 30px rgba(0, 0, 0, 0.28);
+
+  --shadow-elevated:
+    0 20px 60px rgba(0, 0, 0, 0.42);
+
+  /* RADIUS */
+  --radius-card: 22px;
+  --radius-input: 16px;
+  --radius-button: 18px;
+
+  /* MOTION */
+  --transition-fast: 160ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-normal: 240ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* NAV */
+  --nav-height: 88px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =========================================================
+   APP BACKGROUND
+========================================================= */
+
+.app-bg {
+  width: 100%;
+  min-height: 100dvh;
+
+  display: flex;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at top,
+      rgba(76, 141, 255, 0.08),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      #050811 0%,
+      #04070d 45%,
+      #03050a 100%
+    );
+
+  color: var(--text-primary);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =========================================================
+   APP FRAME
+========================================================= */
+
+.app-frame {
+  width: 100%;
+  max-width: 390px;
+
+  min-height: 100dvh;
+
+  position: relative;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(15, 22, 34, 0.98),
+      rgba(7, 10, 16, 1)
+    );
+
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* =========================================================
+   CONTENT
+========================================================= */
+
+.app-content {
+  width: 100%;
+
+  padding:
+    16px
+    16px
+    calc(var(--nav-height) + 40px);
+
+  overflow-x: hidden;
+}
+
+/* =========================================================
+   TYPOGRAPHY
+========================================================= */
+
+.app-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+
+  color: var(--text-muted);
+}
+
+.app-title {
+  margin-top: 6px;
+
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+
+  color: var(--text-primary);
+}
+
+.app-badge {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 7px 12px;
+
+  border-radius: 999px;
+
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-soft);
+
+  font-size: 11px;
+  font-weight: 500;
+
+  color: var(--text-secondary);
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+
+  color: var(--text-primary);
+}
+
+.section-subtitle {
+  margin-top: 4px;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: var(--text-secondary);
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 500;
+
+  color: var(--text-muted);
+}
+
+/* =========================================================
+   SURFACES
+========================================================= */
+
+.card {
+  border-radius: var(--radius-card);
+
+  padding: 18px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.035),
+      rgba(255, 255, 255, 0.02)
+    );
+
+  border: 1px solid var(--border-soft);
+
+  box-shadow: var(--shadow-surface);
+}
+
+.card-elevated {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(19, 28, 42, 0.96),
+      rgba(11, 17, 27, 0.98)
+    );
+
+  border: 1px solid var(--border-strong);
+
+  box-shadow: var(--shadow-elevated);
+}
+
+.card-hero {
+  border-radius: 26px;
+
+  padding: 20px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(76, 141, 255, 0.14),
+      rgba(76, 141, 255, 0.06)
+    );
+
+  border: 1px solid var(--accent-border);
+
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+/* =========================================================
+   INPUTS
+========================================================= */
+
+.input {
+  width: 100%;
+
+  padding: 14px 16px;
+
+  border-radius: var(--radius-input);
+
+  border: 1px solid var(--border-soft);
+
+  background: rgba(255, 255, 255, 0.035);
+
+  color: var(--text-primary);
+
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--text-muted);
+}
+
+.input:focus {
+  border-color: var(--accent-border);
+
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.btn-primary {
+  width: 100%;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 15px 18px;
+
+  border: none;
+  border-radius: var(--radius-button);
+
+  background:
+    linear-gradient(
+      180deg,
+      #4c8dff,
+      #3b78e7
+    );
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  box-shadow:
+    0 10px 25px rgba(59, 120, 231, 0.22);
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+.app-nav {
+  position: fixed;
+
+  left: 50%;
+  transform: translateX(-50%);
+
+  bottom: 0;
+
+  width: 100%;
+  max-width: 390px;
+
+  height: var(--nav-height);
+
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+
+  padding:
+    10px
+    12px
+    calc(env(safe-area-inset-bottom) + 10px);
+
+  border-top: 1px solid var(--border-soft);
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(8, 12, 20, 0.94),
+      rgba(5, 8, 14, 0.98)
+    );
+
+  backdrop-filter: blur(20px);
+
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 5px;
+
+  min-height: 48px;
+
+  border-radius: 14px;
+
+  color: var(--text-muted);
+
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.nav-active {
+  color: var(--text-primary);
+}
+
+.nav-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 999px;
+
+  background: transparent;
+}
+
+.nav-active .nav-dot {
+  background: var(--accent-primary);
 }
