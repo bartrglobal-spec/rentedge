@@ -1,7 +1,26 @@
 'use client'
 
-import { useEffect,useMemo,useState } from 'react'
+import { useEffect, useMemo, useState, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+
+type ProfileState = {
+income:string
+additionalIncome:string
+employment:string
+duration:string
+occupants:string
+pets:string
+smoking:string
+
+depositReady:boolean
+idReady:boolean
+payslipReady:boolean
+bankStatementsReady:boolean
+referencesReady:boolean
+guarantorAvailable:boolean
+
+evictionHistory:string
+}
 
 export default function ProfilePage(){
 
@@ -11,7 +30,7 @@ const [saved,setSaved]=
 useState(false)
 
 const [profile,setProfile]=
-useState({
+useState<ProfileState>({
 
 income:'',
 
@@ -66,9 +85,9 @@ setProfile(prev=>({
 
 },[])
 
-function update(
-field:string,
-value:any
+function update<K extends keyof ProfileState>(
+field:K,
+value:ProfileState[K]
 ){
 
 setProfile(prev=>({
@@ -188,8 +207,6 @@ return(
 
 <div className="mx-auto max-w-md px-4 pb-40 pt-5 space-y-6">
 
-{/* HERO */}
-
 <div className="rounded-[34px] border border-white/10 bg-[#0b1220] p-6">
 
 <div className="text-[10px] uppercase tracking-[0.32em] text-blue-200/60">
@@ -215,17 +232,9 @@ competition signals and affordability positioning.
 
 <div className="flex justify-between text-xs text-white/45">
 
-<span>
+<span>Profile completion</span>
 
-Profile completion
-
-</span>
-
-<span>
-
-{progress}%
-
-</span>
+<span>{progress}%</span>
 
 </div>
 
@@ -248,8 +257,6 @@ progress+'%'
 
 </div>
 
-{/* FINANCIAL */}
-
 <Section
 title="Financial Position"
 subtitle="Financial strength is usually the first filter."
@@ -258,7 +265,7 @@ subtitle="Financial strength is usually the first filter."
 <Input
 placeholder="Monthly income"
 value={profile.income}
-onChange={v=>
+onChange={(v:string)=>
 update(
 'income',
 v
@@ -268,7 +275,7 @@ v
 <Input
 placeholder="Additional income"
 value={profile.additionalIncome}
-onChange={v=>
+onChange={(v:string)=>
 update(
 'additionalIncome',
 v
@@ -276,64 +283,39 @@ v
 />
 
 <Select
-
 value={profile.employment}
-
-onChange={v=>
+onChange={(v:string)=>
 update(
 'employment',
 v
-)
-}
-
+)}
 options={[
-
 'Employed',
-
 'Self-employed',
-
 'Student',
-
 'Retired',
-
 'Unemployed'
-
 ]}
-
 placeholder="Employment"
-
 />
 
 <Select
-
 value={profile.duration}
-
-onChange={v=>
+onChange={(v:string)=>
 update(
 'duration',
 v
-)
-}
-
+)}
 options={[
-
 'Less than 6 months',
-
 '6-12 months',
-
 '1-2 years',
-
 '2+ years'
-
 ]}
-
 placeholder="Income stability"
-
 />
 
 </Section>
-
-{/* READINESS */}
 
 <Section
 title="Application Readiness"
@@ -342,9 +324,7 @@ subtitle="Prepared applicants usually move faster."
 
 <Toggle
 label="Deposit Ready"
-value={
-profile.depositReady
-}
+value={profile.depositReady}
 onClick={()=>
 update(
 'depositReady',
@@ -354,9 +334,7 @@ update(
 
 <Toggle
 label="ID Documents"
-value={
-profile.idReady
-}
+value={profile.idReady}
 onClick={()=>
 update(
 'idReady',
@@ -366,9 +344,7 @@ update(
 
 <Toggle
 label="Payslips Ready"
-value={
-profile.payslipReady
-}
+value={profile.payslipReady}
 onClick={()=>
 update(
 'payslipReady',
@@ -378,9 +354,7 @@ update(
 
 <Toggle
 label="Bank Statements"
-value={
-profile.bankStatementsReady
-}
+value={profile.bankStatementsReady}
 onClick={()=>
 update(
 'bankStatementsReady',
@@ -390,9 +364,7 @@ update(
 
 <Toggle
 label="References"
-value={
-profile.referencesReady
-}
+value={profile.referencesReady}
 onClick={()=>
 update(
 'referencesReady',
@@ -402,8 +374,6 @@ update(
 
 </Section>
 
-{/* COMPETITIVE */}
-
 <Section
 title="Competitive Position"
 subtitle="Your competition is other applicants."
@@ -412,7 +382,7 @@ subtitle="Your competition is other applicants."
 <Input
 placeholder="Occupants"
 value={profile.occupants}
-onChange={v=>
+onChange={(v:string)=>
 update(
 'occupants',
 v
@@ -420,38 +390,28 @@ v
 />
 
 <SelectionRow
-
 label="Pets"
-
 value={profile.pets}
-
-onSelect={v=>
+onSelect={(v:string)=>
 update(
 'pets',
 v
 )}
-
 />
 
 <SelectionRow
-
 label="Smoking"
-
 value={profile.smoking}
-
-onSelect={v=>
+onSelect={(v:string)=>
 update(
 'smoking',
 v
 )}
-
 />
 
 <Toggle
 label="Guarantor Available"
-value={
-profile.guarantorAvailable
-}
+value={profile.guarantorAvailable}
 onClick={()=>
 update(
 'guarantorAvailable',
@@ -460,8 +420,6 @@ update(
 />
 
 </Section>
-
-{/* STICKY SAVE */}
 
 <div className="fixed bottom-0 left-0 right-0 border-t border-white/10 bg-[#07111F]/95 backdrop-blur-xl p-4">
 
@@ -507,7 +465,11 @@ function Section({
 title,
 subtitle,
 children
-}:any){
+}:{
+title:string
+subtitle:string
+children:ReactNode
+}){
 
 return(
 
@@ -541,7 +503,11 @@ function Input({
 value,
 onChange,
 placeholder
-}:any){
+}:{
+value:string
+onChange:(v:string)=>void
+placeholder:string
+}){
 
 return(
 
@@ -551,7 +517,7 @@ value={value}
 
 placeholder={placeholder}
 
-onChange={e=>
+onChange={(e)=>
 onChange(
 e.target.value
 )
@@ -570,7 +536,12 @@ value,
 onChange,
 options,
 placeholder
-}:any){
+}:{
+value:string
+onChange:(v:string)=>void
+options:string[]
+placeholder:string
+}){
 
 return(
 
@@ -578,7 +549,7 @@ return(
 
 value={value}
 
-onChange={e=>
+onChange={(e)=>
 onChange(
 e.target.value
 )
@@ -594,7 +565,7 @@ className="input"
 
 </option>
 
-{options.map((o:string)=>(
+{options.map((o)=>(
 
 <option
 key={o}
@@ -617,11 +588,17 @@ function Toggle({
 label,
 value,
 onClick
-}:any){
+}:{
+label:string
+value:boolean
+onClick:()=>void
+}){
 
 return(
 
 <button
+
+type="button"
 
 onClick={onClick}
 
@@ -633,11 +610,7 @@ value
 
 >
 
-<span>
-
-{label}
-
-</span>
+<span>{label}</span>
 
 <span>
 
@@ -657,7 +630,11 @@ function SelectionRow({
 label,
 value,
 onSelect
-}:any){
+}:{
+label:string
+value:string
+onSelect:(v:string)=>void
+}){
 
 return(
 
@@ -675,6 +652,8 @@ return(
 (item)=>(
 
 <button
+
+type="button"
 
 key={item}
 
