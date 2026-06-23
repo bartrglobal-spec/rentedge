@@ -3,499 +3,386 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+type Property = {
+  id: number
+  title: string
+  area: string
+  rent: number
+  bedrooms: number
+}
+
 export default function CheckPage() {
   const router = useRouter()
 
-  const [profile, setProfile] = useState<any>(null)
-
-  const [properties, setProperties] = useState<any[]>([])
-
-  const [extracting, setExtracting] =
-    useState(false)
-
-  const [extractMessage, setExtractMessage] =
-    useState('')
-
-  const [current, setCurrent] = useState({
-    link: '',
-    area: '',
-    rent: '',
-    bedrooms: '',
-    title: '',
-  })
+  const [properties, setProperties] = useState<Property[]>([])
+  const [extracting, setExtracting] = useState(false)
+  const [extractMessage, setExtractMessage] = useState('')
+  const [extractOk, setExtractOk] = useState(false)
+  const [showAddProperty, setShowAddProperty] = useState(false)
+  const [editingPropertyId, setEditingPropertyId] = useState<number | null>(null)
+  const [editValues, setEditValues] = useState({ title: '', area: '', rent: '', bedrooms: '' })
+  const [current, setCurrent] = useState({ link: '', title: '', area: '', rent: '', bedrooms: '' })
 
   const hasLoaded = useRef(false)
 
+  // ─── Load from localStorage ───────────────────────────
   useEffect(() => {
-    const saved = JSON.parse(
-      localStorage.getItem(
-        'rentedge_profile'
-      ) || 'null'
-    )
-
-    if (saved) {
-      const normalizedProfile = {
-        ...saved,
-
-        pets:
-          saved.pets === true ||
-          saved.pets === 'Yes',
-
-        payslipReady:
-          saved.payslipReady === true ||
-          saved.payslip === true,
-
-        idReady:
-          saved.idReady === true,
-      }
-
-      setProfile(normalizedProfile)
-    }
-  }, [])
-
-  useEffect(() => {
-    const savedProps = JSON.parse(
-      localStorage.getItem(
-        'rentedge_properties'
-      ) || '[]'
-    )
-
-    if (
-      Array.isArray(savedProps) &&
-      savedProps.length > 0
-    ) {
-      const normalized = savedProps.map(
-        (p: any) => ({
+    const saved = JSON.parse(localStorage.getItem('rentedge_properties') || '[]')
+    if (Array.isArray(saved) && saved.length > 0) {
+      setProperties(
+        saved.map((p: any) => ({
           id: p.id,
+          title: p.title || p.label || 'Property',
+          area: p.area || p.location || '',
           rent: Number(p.rent),
           bedrooms: Number(p.bedrooms),
-          title:
-            p.title ||
-            p.label ||
-            p.location ||
-            'Property',
-          location:
-            p.location ||
-            p.label ||
-            '',
-        })
+        }))
       )
-
-      setProperties(normalized)
     }
-
     hasLoaded.current = true
   }, [])
 
+  // ─── Persist to localStorage ──────────────────────────
   useEffect(() => {
     if (!hasLoaded.current) return
-
-    localStorage.setItem(
-      'rentedge_properties',
-      JSON.stringify(properties)
-    )
+    localStorage.setItem('rentedge_properties', JSON.stringify(properties))
   }, [properties])
 
+  // ─── Autofill from URL ────────────────────────────────
   const handleAutofill = async () => {
-    if (!current.link) {
-      alert('Paste a property link first')
-      return
-    }
-
+    if (!current.link) return
+    setExtracting(true)
+    setExtractMessage('')
+    setExtractOk(false)
     try {
-      setExtracting(true)
-
-      setExtractMessage(
-        'Extracting property details...'
-      )
-
       const res = await fetch('/api/scrape', {
         method: 'POST',
-        headers: {
-          'Content-Type':
-            'application/json',
-        },
-        body: JSON.stringify({
-          url: current.link,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: current.link }),
       })
-
-      if (!res.ok) {
-        throw new Error()
-      }
-
+      if (!res.ok) throw new Error()
       const data = await res.json()
-
-      setCurrent((prev) => ({
+      setCurrent(prev => ({
         ...prev,
-
-        title:
-          data.location ||
-          data.title ||
-          '',
-
-        area:
-          data.location ||
-          prev.area,
-
-        rent: data.price
-          ? String(data.price)
-          : prev.rent,
-
-        bedrooms: data.bedrooms
-          ? String(data.bedrooms)
-          : prev.bedrooms,
+        title: data.title || data.location || prev.title,
+        area: data.location || prev.area,
+        rent: data.price ? String(data.price) : prev.rent,
+        bedrooms: data.bedrooms ? String(data.bedrooms) : prev.bedrooms,
       }))
-
-      setExtractMessage(
-        'Property details extracted successfully'
-      )
+      setExtractOk(true)
+      setExtractMessage('Details found — check everything before saving.')
     } catch {
-      setExtractMessage(
-        'Extraction failed. Complete manually.'
-      )
+      setExtractOk(false)
+      setExtractMessage('Could not extract details. Fill in manually below.')
     } finally {
       setExtracting(false)
     }
   }
 
+  // ─── Add property ─────────────────────────────────────
   const addProperty = () => {
-    if (
-      !current.area ||
-      !current.rent ||
-      !current.bedrooms
-    ) {
-      alert(
-        'Complete property details first'
-      )
-
-      return
+    if (properties.length >= 5) return
+    if (!current.area || !current.rent || !current.bedrooms) return
+    const property: Property = {
+      id: Date.now(),
+      title: current.title || `${current.bedrooms} Bedroom Property`,
+      area: current.area,
+      rent: Number(current.rent),
+      bedrooms: Number(current.bedrooms),
     }
-
-    const bedrooms = Number(
-      current.bedrooms
-    )
-
-    const area = current.area
-
-    setProperties((prev) => [
-      ...prev,
-
-      {
-        id: Date.now(),
-
-        rent: Number(current.rent),
-
-        bedrooms,
-
-        title:
-          current.title ||
-          `${bedrooms}-bedroom in ${area}`,
-
-        location: area,
-      },
-    ])
-
-    setCurrent({
-      link: '',
-      area: '',
-      rent: '',
-      bedrooms: '',
-      title: '',
-    })
-
+    setProperties(prev => [...prev, property])
+    setCurrent({ link: '', title: '', area: '', rent: '', bedrooms: '' })
     setExtractMessage('')
+    setExtractOk(false)
+    setShowAddProperty(false)
   }
 
+  // ─── Remove / Edit ────────────────────────────────────
   const removeProperty = (id: number) => {
-    setProperties((prev) =>
-      prev.filter((p) => p.id !== id)
-    )
+    if (editingPropertyId === id) setEditingPropertyId(null)
+    setProperties(prev => prev.filter(p => p.id !== id))
   }
 
-  const goToUnlock = (id: number) => {
-    localStorage.setItem(
-      'rentedge_selected_property_id',
-      String(id)
-    )
-
-    router.push('/unlock-preview')
+  const startEditing = (p: Property) => {
+    setEditingPropertyId(p.id)
+    setEditValues({ title: p.title, area: p.area, rent: String(p.rent), bedrooms: String(p.bedrooms) })
   }
+
+  const cancelEditing = () => {
+    setEditingPropertyId(null)
+    setEditValues({ title: '', area: '', rent: '', bedrooms: '' })
+  }
+
+  const saveEdits = (id: number) => {
+    if (!editValues.area || !editValues.rent || !editValues.bedrooms) return
+    setProperties(prev =>
+      prev.map(p =>
+        p.id !== id ? p : {
+          ...p,
+          title: editValues.title || `${editValues.bedrooms} Bedroom Property`,
+          area: editValues.area,
+          rent: Number(editValues.rent),
+          bedrooms: Number(editValues.bedrooms),
+        }
+      )
+    )
+    cancelEditing()
+  }
+
+  // ─── Guidance copy ────────────────────────────────────
+  const guidanceText = () => {
+    if (properties.length === 0) return 'Add at least one property to get started.'
+    if (properties.length <= 2) return 'Add a few more to compare your options.'
+    if (properties.length < 5) return 'Good comparison set. Add more or continue.'
+    return 'Property limit reached. Continue to build your profile.'
+  }
+
+  const canContinue = properties.length > 0
 
   return (
-    <div className="space-y-6">
+    <div className="section-gap" style={{ paddingTop: 8 }}>
 
-      {/* HEADER */}
-
-      <div>
-
-        <div className="text-[11px] uppercase tracking-[0.28em] text-blue-200/50">
-          Property Check
-        </div>
-
-        <h1 className="mt-3 text-[30px] font-semibold tracking-tight text-white">
-          Evaluate a rental property
+      {/* ─── Header ─── */}
+      <section>
+        <p className="app-eyebrow">Step 1 of 3</p>
+        <h1 className="app-title" style={{ marginTop: 8 }}>
+          Target Properties
         </h1>
-
-        <p className="mt-3 max-w-sm text-sm leading-7 text-white/50">
-          Understand affordability pressure,
-          approval friction, and renter
-          positioning before applying.
+        <p className="section-subtitle">
+          Add the rentals you are seriously considering. We will compare them once your profile is complete.
         </p>
-
-      </div>
-
-      {/* PROPERTY INPUT */}
-
-      <section className="overflow-hidden rounded-[30px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.92),rgba(9,14,24,0.98))] p-5 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-
-        <div className="flex items-start justify-between gap-4">
-
-          <div>
-
-            <div className="text-[10px] uppercase tracking-[0.24em] text-white/35">
-              Property Details
-            </div>
-
-            <h2 className="mt-2 text-xl font-semibold text-white">
-              Add a rental listing
-            </h2>
-
-            <p className="mt-2 text-sm leading-6 text-white/45">
-              Paste a listing URL or enter
-              the property manually.
-            </p>
-
-          </div>
-
-          <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-[11px] text-blue-200">
-            Beta
-          </div>
-
-        </div>
-
-        {/* LINK INPUT */}
-
-        <div className="mt-6 space-y-4">
-
-          <div>
-
-            <div className="mb-2 text-[11px] uppercase tracking-[0.2em] text-white/35">
-              Listing Link
-            </div>
-
-            <input
-              placeholder="https://www.property24.com/..."
-              value={current.link}
-              onChange={(e) =>
-                setCurrent({
-                  ...current,
-                  link: e.target.value,
-                })
-              }
-              className="input"
-            />
-
-          </div>
-
-          {/* EXTRACT BUTTON */}
-
-          <button
-            onClick={handleAutofill}
-            disabled={extracting}
-            className="
-              flex
-              w-full
-              items-center
-              justify-center
-              rounded-2xl
-              border
-              border-blue-500/20
-              bg-blue-500/10
-              px-5
-              py-4
-              text-sm
-              font-semibold
-              text-blue-100
-              transition
-              hover:bg-blue-500/15
-              disabled:opacity-50
-            "
-          >
-            {extracting
-              ? 'Extracting listing details...'
-              : 'Extract property details'}
-          </button>
-
-          {/* EXTRACTION FEEDBACK */}
-
-          {extractMessage && (
-
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white/55">
-              {extractMessage}
-            </div>
-
-          )}
-
-          {/* MANUAL INPUTS */}
-
-          <div className="grid gap-3 pt-2">
-
-            <input
-              placeholder="Area / Suburb"
-              value={current.area}
-              onChange={(e) =>
-                setCurrent({
-                  ...current,
-                  area: e.target.value,
-                })
-              }
-              className="input"
-            />
-
-            <input
-              placeholder="Monthly rent (R)"
-              value={current.rent}
-              onChange={(e) =>
-                setCurrent({
-                  ...current,
-                  rent: e.target.value,
-                })
-              }
-              className="input"
-            />
-
-            <input
-              placeholder="Bedrooms"
-              value={current.bedrooms}
-              onChange={(e) =>
-                setCurrent({
-                  ...current,
-                  bedrooms: e.target.value,
-                })
-              }
-              className="input"
-            />
-
-          </div>
-
-          {/* ADD BUTTON */}
-
-          <button
-            onClick={addProperty}
-            className="btn-primary"
-          >
-            Add Property
-          </button>
-
-        </div>
-
       </section>
 
-      {/* SAVED PROPERTIES */}
+      {/* ─── Counter + guidance ─── */}
+      <div className="card-inner" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <span className="body-text" style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+          {guidanceText()}
+        </span>
+        <span
+          className="app-badge"
+          style={{
+            flexShrink: 0,
+            color: properties.length >= 3 ? 'var(--success)' : 'var(--text-muted)',
+            borderColor: properties.length >= 3 ? 'var(--success-border)' : undefined,
+            background: properties.length >= 3 ? 'var(--success-soft)' : undefined,
+          }}
+        >
+          {properties.length} / 5
+        </span>
+      </div>
 
+      {/* ─── Property list ─── */}
       {properties.length > 0 && (
+        <section className="section-gap">
+          {properties.map(property => (
+            <div key={property.id} className="card card-elevated">
 
-        <section className="space-y-3">
-
-          <div className="flex items-center justify-between">
-
-            <div>
-
-              <div className="text-[10px] uppercase tracking-[0.22em] text-white/35">
-                Workspace
-              </div>
-
-              <div className="mt-2 text-xl font-semibold">
-                Saved target properties
-              </div>
-
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/45">
-              {properties.length} tracked
-            </div>
-
-          </div>
-
-          {properties.map((p, index) => (
-
-            <div
-              key={p.id}
-              className="rounded-[26px] border border-white/10 bg-[#0b1220] p-5"
-            >
-
-              <div className="flex items-start justify-between gap-4">
-
-                <div className="min-w-0 flex-1">
-
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-white/35">
-                    {index === 0
-                      ? 'Primary Target'
-                      : 'Tracked Property'}
+              {editingPropertyId === property.id ? (
+                /* Edit mode */
+                <div className="section-gap">
+                  <p className="label" style={{ marginBottom: -4 }}>Editing property</p>
+                  <input
+                    placeholder="Property name (optional)"
+                    value={editValues.title}
+                    onChange={e => setEditValues({ ...editValues, title: e.target.value })}
+                    className="input"
+                  />
+                  <input
+                    placeholder="Area / suburb *"
+                    value={editValues.area}
+                    onChange={e => setEditValues({ ...editValues, area: e.target.value })}
+                    className="input"
+                  />
+                  <input
+                    placeholder="Monthly rent in R *"
+                    value={editValues.rent}
+                    onChange={e => setEditValues({ ...editValues, rent: e.target.value })}
+                    className="input"
+                    inputMode="numeric"
+                  />
+                  <input
+                    placeholder="Bedrooms *"
+                    value={editValues.bedrooms}
+                    onChange={e => setEditValues({ ...editValues, bedrooms: e.target.value })}
+                    className="input"
+                    inputMode="numeric"
+                  />
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={() => saveEdits(property.id)} className="btn-primary" style={{ flex: 1 }}>
+                      Save
+                    </button>
+                    <button onClick={cancelEditing} className="btn-secondary" style={{ width: 'auto', padding: '15px 18px' }}>
+                      Cancel
+                    </button>
                   </div>
-
-                  <h3 className="mt-3 text-xl font-semibold leading-tight text-white break-words">
-                    {p.title}
-                  </h3>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-white/45">
-
-                    <span>
-                      R{p.rent}
-                    </span>
-
-                    <span className="text-white/20">
-                      •
-                    </span>
-
-                    <span>
-                      {p.bedrooms} bedroom
-                    </span>
-
-                  </div>
-
                 </div>
-
-                <button
-                  onClick={() =>
-                    removeProperty(p.id)
-                  }
-                  className="text-xs text-white/35 transition hover:text-white/60"
-                >
-                  Remove
-                </button>
-
-              </div>
-
-              {/* MAIN ACTION */}
-
-              <div className="mt-5">
-
-                <button
-                  onClick={() =>
-                    goToUnlock(p.id)
-                  }
-                  className="w-full rounded-2xl bg-white px-4 py-4 text-sm font-semibold text-black transition hover:bg-white/90"
-                >
-                  View Property Analysis
-                </button>
-
-              </div>
-
-              {/* BETA INFO */}
-
-              <div className="mt-4 rounded-2xl border border-blue-500/15 bg-blue-500/10 px-4 py-3 text-sm leading-6 text-blue-100/90">
-                Free beta access is currently active while RentEdge positioning systems are being refined.
-              </div>
+              ) : (
+                /* View mode */
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <p className="section-title" style={{ fontSize: 15 }}>{property.title}</p>
+                    <p className="body-text" style={{ marginTop: 4, fontSize: 13 }}>{property.area}</p>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
+                      <span className="app-badge badge-accent">
+                        R{property.rent.toLocaleString()}/mo
+                      </span>
+                      <span className="app-badge">
+                        {property.bedrooms} bed{property.bedrooms !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+                    <button
+                      onClick={() => startEditing(property)}
+                      className="btn-ghost"
+                      style={{ padding: '6px 10px', fontSize: 13 }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => removeProperty(property.id)}
+                      className="btn-ghost"
+                      style={{ padding: '6px 10px', fontSize: 13, color: 'var(--danger)' }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              )}
 
             </div>
-
           ))}
-
         </section>
-
       )}
+
+      {/* ─── Add property ─── */}
+      <section>
+        {!showAddProperty && properties.length < 5 && (
+          <button
+            onClick={() => setShowAddProperty(true)}
+            className="btn-secondary"
+            style={{ borderStyle: 'dashed' }}
+          >
+            + Add Property
+          </button>
+        )}
+
+        {showAddProperty && (
+          <div className="card card-elevated section-gap">
+            <div>
+              <p className="section-title" style={{ fontSize: 15 }}>Add a property</p>
+              <p className="section-subtitle" style={{ marginTop: 4 }}>
+                Paste a listing URL to autofill, or enter details manually.
+              </p>
+            </div>
+
+            {/* URL autofill */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                placeholder="Paste listing URL (optional)"
+                value={current.link}
+                onChange={e => setCurrent({ ...current, link: e.target.value })}
+                className="input"
+                style={{ flex: 1 }}
+              />
+              <button
+                onClick={handleAutofill}
+                disabled={extracting || !current.link}
+                className="btn-secondary"
+                style={{
+                  width: 'auto',
+                  padding: '15px 16px',
+                  flexShrink: 0,
+                  opacity: !current.link ? 0.4 : 1,
+                }}
+              >
+                {extracting ? '...' : 'Fill'}
+              </button>
+            </div>
+
+            {/* Extract feedback */}
+            {extractMessage && (
+              <div className={extractOk ? 'card-success' : 'card-warning'}>
+                <p className="body-text" style={{ fontSize: 13, color: extractOk ? 'var(--success)' : 'var(--warning)' }}>
+                  {extractMessage}
+                </p>
+              </div>
+            )}
+
+            <div className="divider" />
+
+            {/* Manual fields */}
+            <input
+              placeholder="Property name (optional)"
+              value={current.title}
+              onChange={e => setCurrent({ ...current, title: e.target.value })}
+              className="input"
+            />
+            <input
+              placeholder="Area / suburb *"
+              value={current.area}
+              onChange={e => setCurrent({ ...current, area: e.target.value })}
+              className="input"
+            />
+            <input
+              placeholder="Monthly rent in R *"
+              value={current.rent}
+              onChange={e => setCurrent({ ...current, rent: e.target.value })}
+              className="input"
+              inputMode="numeric"
+            />
+            <input
+              placeholder="Bedrooms *"
+              value={current.bedrooms}
+              onChange={e => setCurrent({ ...current, bedrooms: e.target.value })}
+              className="input"
+              inputMode="numeric"
+            />
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={addProperty}
+                disabled={!current.area || !current.rent || !current.bedrooms}
+                className="btn-primary"
+                style={{
+                  flex: 1,
+                  opacity: !current.area || !current.rent || !current.bedrooms ? 0.4 : 1,
+                }}
+              >
+                Save Property
+              </button>
+              <button
+                onClick={() => {
+                  setShowAddProperty(false)
+                  setExtractMessage('')
+                  setExtractOk(false)
+                }}
+                className="btn-secondary"
+                style={{ width: 'auto', padding: '15px 18px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ─── Continue CTA ─── */}
+      <section>
+        <button
+          disabled={!canContinue}
+          onClick={() => router.push('/adaptive-profile')}
+          className="btn-primary"
+          style={{ opacity: canContinue ? 1 : 0.35 }}
+        >
+          Continue to Profile
+        </button>
+        {!canContinue && (
+          <p className="body-text" style={{ textAlign: 'center', marginTop: 10, fontSize: 12 }}>
+            Add at least one property to continue
+          </p>
+        )}
+      </section>
 
     </div>
   )

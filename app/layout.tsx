@@ -1,21 +1,27 @@
-import "./globals.css";
-import Shell from "./Shell";
+import './globals.css'
 
-export const metadata = {
-  title: "RentEdge",
-  description: "Know where you stand before you apply",
-};
+import { ReactNode } from 'react'
+
+import RouteShell from '../components/layout/RouteShell'
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode
 }) {
   return (
     <html lang="en">
-      <body className="app-bg">
-        <Shell>{children}</Shell>
+
+      <body>
+
+        <RouteShell>
+
+          {children}
+
+        </RouteShell>
+
       </body>
+
     </html>
-  );
+  )
 }

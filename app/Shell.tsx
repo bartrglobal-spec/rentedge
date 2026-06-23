@@ -1,296 +1,213 @@
 'use client'
 
-import {
-  ReactNode,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { ReactNode, useEffect, useState } from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 
-import {
-  usePathname,
-  useRouter,
-} from 'next/navigation'
+// ─── Icons ───────────────────────────────────────────────
 
-type NavItem = {
-  name: string
-  path: string
-  visible?: boolean
-  locked?: boolean
+function IconHome({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+      <path d="M9 21V12h6v9"/>
+    </svg>
+  )
 }
 
-export default function Shell({
-  children,
-}: {
-  children: ReactNode
-}) {
-  const router = useRouter()
-  const pathname = usePathname()
-
-  const [profileComplete, setProfileComplete] =
-    useState(false)
-
-  const [hasUnlockData, setHasUnlockData] =
-    useState(false)
-
-  useEffect(() => {
-    const profile =
-      localStorage.getItem(
-        'rentedge_profile_complete'
-      ) === 'true'
-
-    setProfileComplete(profile)
-
-    try {
-      const properties = JSON.parse(
-        localStorage.getItem(
-          'rentedge_properties'
-        ) || '[]'
-      )
-
-      setHasUnlockData(
-        Array.isArray(properties) &&
-          properties.length > 0
-      )
-    } catch {
-      setHasUnlockData(false)
-    }
-  }, [])
-
-  const navItems: NavItem[] = useMemo(
-    () => [
-      {
-        name: 'Home',
-        path: '/',
-      },
-      {
-        name: 'Profile',
-        path: '/profile',
-      },
-      {
-        name: 'Check',
-        path: '/check',
-        locked: !profileComplete,
-      },
-      {
-        name: 'Unlock',
-        path: '/unlock',
-        visible: hasUnlockData,
-        locked: !hasUnlockData,
-      },
-    ],
-    [profileComplete, hasUnlockData]
+function IconSearch({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="7"/>
+      <path d="M16.5 16.5L21 21"/>
+    </svg>
   )
+}
 
-  const visibleNavItems = navItems.filter(
-    (item) => item.visible !== false
+function IconUser({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="4"/>
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+    </svg>
   )
+}
+
+function IconUnlock({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0110 0"/>
+    </svg>
+  )
+}
+
+function IconGrid({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+      <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+      <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+    </svg>
+  )
+}
+
+// ─── Onboarding progress bar ─────────────────────────────
+
+// Pages that are part of the onboarding funnel, in order
+const ONBOARDING_PAGES = [
+  '/check',
+  '/adaptive-profile',
+  '/preview',
+]
+
+const ONBOARDING_LABELS = [
+  'Properties',
+  'Profile',
+  'Preview',
+]
+
+function OnboardingBar({ pathname }: { pathname: string }) {
+  const currentIndex = ONBOARDING_PAGES.indexOf(pathname)
+  if (currentIndex === -1) return null
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#020617] text-white">
-
-      {/* GLOBAL BACKGROUND */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-
-        {/* TOP GLOW */}
-        <div
-          className="
-            absolute
-            left-1/2
-            top-[-220px]
-            h-[520px]
-            w-[520px]
-            -translate-x-1/2
-            rounded-full
-            bg-blue-500/10
-            blur-3xl
-          "
-        />
-
-        {/* SIDE GLOW */}
-        <div
-          className="
-            absolute
-            right-[-120px]
-            top-[30%]
-            h-[260px]
-            w-[260px]
-            rounded-full
-            bg-cyan-400/5
-            blur-3xl
-          "
-        />
-
-        {/* GRID OVERLAY */}
-        <div
-          className="
-            absolute
-            inset-0
-            opacity-[0.03]
-            [background-image:linear-gradient(rgba(255,255,255,0.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.12)_1px,transparent_1px)]
-            [background-size:32px_32px]
-          "
-        />
-
+    <div className="onboarding-bar">
+      <div className="onboarding-steps">
+        {ONBOARDING_PAGES.map((_, i) => (
+          <div
+            key={i}
+            className={
+              'onboarding-step ' +
+              (i < currentIndex
+                ? 'onboarding-step-done'
+                : i === currentIndex
+                ? 'onboarding-step-active'
+                : '')
+            }
+          />
+        ))}
       </div>
+      <span className="onboarding-label">
+        {ONBOARDING_LABELS[currentIndex]}
+      </span>
+    </div>
+  )
+}
 
-      {/* APP WRAPPER */}
-      <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col">
+// ─── Nav items ───────────────────────────────────────────
 
-        {/* DEVICE SURFACE */}
+const NAV_ITEMS = [
+  { name: 'Home',      path: '/',          icon: <IconHome /> },
+  { name: 'Check',     path: '/check',     icon: <IconSearch /> },
+  { name: 'Profile',   path: '/adaptive-profile', icon: <IconUser /> },
+  { name: 'Unlock',    path: '/unlock',    icon: <IconUnlock /> },
+  { name: 'Dashboard', path: '/dashboard', icon: <IconGrid /> },
+]
+
+// Pages where the bottom nav is always hidden (onboarding funnel)
+const NAV_HIDDEN_PATHS = ['/', '/check', '/adaptive-profile', '/preview']
+
+// ─── Shell ───────────────────────────────────────────────
+
+export default function Shell({ children }: { children: ReactNode }) {
+  const router   = useRouter()
+  const pathname = usePathname()
+
+  const [profileComplete, setProfileComplete] = useState(false)
+
+  useEffect(() => {
+    const complete =
+      localStorage.getItem('rentedge_profile_complete') === 'true'
+    setProfileComplete(complete)
+  }, [pathname])
+
+  // Nav is visible only after onboarding is complete,
+  // OR if the user is already on /unlock or /dashboard
+  const isOnboardingPage = NAV_HIDDEN_PATHS.includes(pathname)
+  const showNav = profileComplete || (!isOnboardingPage)
+
+  // During onboarding: no nav padding. After: add nav padding.
+  const showOnboardingBar = ONBOARDING_PAGES.includes(pathname)
+
+  return (
+    <div className="app-bg">
+      <div className="app-frame">
+
+        {/* ONBOARDING PROGRESS — shown during funnel only */}
+        {showOnboardingBar && (
+          <OnboardingBar pathname={pathname} />
+        )}
+
+        {/* PAGE CONTENT */}
         <div
-          className="
-            relative
-            flex
-            min-h-screen
-            flex-col
-            border-x
-            border-white/[0.04]
-            bg-[linear-gradient(180deg,rgba(10,15,26,0.96),rgba(4,7,13,1))]
-            shadow-[0_0_120px_rgba(0,0,0,0.45)]
-          "
+          className={
+            'app-content ' +
+            (showNav ? 'app-content-with-nav' : '')
+          }
         >
+          {children}
+        </div>
 
-          {/* TOP HAIRLINE */}
-          <div className="absolute inset-x-0 top-0 h-px bg-white/[0.06]" />
-
-          {/* SCROLL CONTENT */}
-          <section
-            className="
-              relative
-              flex-1
-              overflow-y-auto
-              overflow-x-hidden
-              px-4
-              pt-5
-              pb-32
-              scrollbar-none
-            "
-          >
-            {children}
-          </section>
-
-          {/* BOTTOM NAV */}
-          <nav
-            className="
-              fixed
-              bottom-0
-              left-1/2
-              z-50
-              flex
-              w-full
-              max-w-md
-              -translate-x-1/2
-              items-center
-              gap-2
-              border-t
-              border-white/[0.06]
-              bg-[rgba(6,10,18,0.88)]
-              px-3
-              pb-[calc(env(safe-area-inset-bottom)+12px)]
-              pt-3
-              backdrop-blur-2xl
-            "
-          >
-
-            {/* NAV SHADOW */}
-            <div
-              className="
-                pointer-events-none
-                absolute
-                inset-x-0
-                top-0
-                h-12
-                bg-gradient-to-t
-                from-transparent
-                to-black/20
-              "
-            />
-
-            {visibleNavItems.map((item) => {
+        {/* BOTTOM NAV — hidden during onboarding */}
+        {showNav && (
+          <nav className="app-nav">
+            {NAV_ITEMS.map((item) => {
               const active =
-                pathname === item.path
+                pathname === item.path ||
+                (item.path !== '/' && pathname.startsWith(item.path))
 
               return (
                 <button
                   key={item.path}
                   type="button"
-                  disabled={item.locked}
-                  onClick={() =>
-                    router.push(item.path)
-                  }
-                  className={`
-                    relative
-                    flex
-                    min-w-0
-                    flex-1
-                    flex-col
-                    items-center
-                    justify-center
-                    gap-1.5
-                    rounded-2xl
-                    px-2
-                    py-2.5
-                    transition-all
-                    duration-200
-                    ${
-                      active
-                        ? `
-                          bg-white
-                          text-black
-                          shadow-[0_10px_30px_rgba(255,255,255,0.12)]
-                        `
-                        : `
-                          text-white/40
-                          hover:bg-white/[0.03]
-                          hover:text-white/70
-                        `
-                    }
-                    ${
-                      item.locked
-                        ? 'cursor-not-allowed opacity-30'
-                        : ''
-                    }
-                  `}
+                  onClick={() => router.push(item.path)}
+                  className={'nav-item ' + (active ? 'nav-active' : '')}
+                  style={{
+                    color: active
+                      ? 'var(--text-primary)'
+                      : 'var(--text-muted)',
+                  }}
                 >
+                  {/* Active background pill */}
+                  {active && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        inset: '4px 2px',
+                        borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.07)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    />
+                  )}
 
-                  {/* ACTIVE DOT */}
-                  <div
-                    className={`
-                      h-1.5
-                      w-1.5
-                      rounded-full
-                      transition-all
-                      ${
-                        active
-                          ? 'bg-black'
-                          : 'bg-white/25'
-                      }
-                    `}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    {item.icon}
+                  </div>
 
-                  {/* LABEL */}
-                  <span
-                    className="
-                      truncate
-                      text-[11px]
-                      font-medium
-                      tracking-[-0.01em]
-                    "
-                  >
+                  <span className="nav-label" style={{ position: 'relative' }}>
                     {item.name}
                   </span>
 
+                  <div
+                    className="nav-dot"
+                    style={{
+                      background: active ? 'var(--accent-primary)' : 'transparent',
+                    }}
+                  />
                 </button>
               )
             })}
-
           </nav>
-
-        </div>
+        )}
 
       </div>
-
-    </main>
+    </div>
   )
 }
