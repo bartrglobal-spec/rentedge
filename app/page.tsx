@@ -10,11 +10,17 @@ export default function LandingPage() {
   useEffect(() => {
     setMounted(true)
 
-    // If user has already completed profile, skip to check
+    // Returning user who completed the full flow → dashboard
     const profileComplete =
       localStorage.getItem('rentedge_profile_complete') === 'true'
-
     if (profileComplete) {
+      router.replace('/dashboard')
+      return
+    }
+
+    // Returning user who added properties but not finished → check
+    const properties = localStorage.getItem('rentedge_properties')
+    if (properties && properties !== '[]') {
       router.replace('/check')
     }
   }, [router])
@@ -22,133 +28,137 @@ export default function LandingPage() {
   if (!mounted) return null
 
   return (
-    <div className="flex min-h-[calc(100dvh-80px)] flex-col px-2">
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      minHeight: '100dvh',
+      padding: '0 16px',
+    }}>
 
-      {/* WORDMARK */}
-      <div className="pt-8 pb-2">
-        <span className="app-eyebrow tracking-[0.28em]">
+      {/* ── Wordmark ── */}
+      <div style={{ paddingTop: 32, paddingBottom: 8 }}>
+        <span className="app-eyebrow" style={{ letterSpacing: '0.28em' }}>
           RENTEDGE
         </span>
       </div>
 
-      {/* HERO AREA */}
-      <div className="flex flex-1 flex-col justify-center gap-6 py-8">
+      {/* ── Hero area ── */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        gap: 16,
+        paddingTop: 24,
+        paddingBottom: 24,
+      }}>
 
-        {/* MAIN CARD */}
+        {/* Main hero card */}
         <div className="card-hero">
-          <div className="app-badge badge-accent mb-5">
-            For renters
-          </div>
+          <span className="app-badge badge-gold">
+            South Africa · Free during beta
+          </span>
 
-          <h1
-            className="text-[26px] font-semibold leading-[1.2] tracking-[-0.03em]"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            Know what an agent
-            might ask before
-            you apply.
+          <h1 style={{
+            marginTop: 20,
+            fontSize: 27,
+            fontWeight: 660,
+            lineHeight: 1.2,
+            letterSpacing: '-0.03em',
+            color: 'var(--text-primary)',
+          }}>
+            Know what landlords
+            and agents are looking
+            for before you apply.
           </h1>
 
-          <p className="mt-4 text-[14px] leading-[1.7]"
-            style={{ color: 'var(--text-secondary)' }}>
-            RentEdge helps you understand how your
-            situation may be viewed — and what you
-            can do to strengthen your position.
+          <p style={{
+            marginTop: 14,
+            fontSize: 14,
+            lineHeight: 1.7,
+            color: 'var(--text-secondary)',
+          }}>
+            RentEdge analyses your rental situation against the
+            properties you are targeting — and tells you exactly
+            what to focus on before submitting an application.
           </p>
 
-          <div
-            className="mt-6 h-px w-full"
-            style={{ background: 'var(--accent-border)' }}
-          />
+          <div style={{
+            marginTop: 20,
+            height: 1,
+            background: 'var(--accent-border)',
+          }} />
 
-          {/* WHAT IT DOES — 3 lines */}
-          <div className="mt-5 flex flex-col gap-4">
+          {/* Three value points */}
+          <div style={{
+            marginTop: 18,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 14,
+          }}>
             {[
-              {
-                icon: '○',
-                text: 'Understand your rental picture',
-              },
-              {
-                icon: '○',
-                text: 'See what questions might come up',
-              },
-              {
-                icon: '○',
-                text: 'Get a strategy before you apply',
-              },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div
-                  className="mt-[3px] flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[9px]"
-                  style={{
-                    background: 'var(--accent-soft)',
-                    border: '1px solid var(--accent-border)',
-                    color: 'var(--accent-primary)',
-                  }}
-                >
-                  ✓
-                </div>
-                <span
-                  className="text-[13px] leading-[1.5]"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  {item.text}
+              'See if you meet the 3x income rule agents apply',
+              'Find out what documents you need — before they ask',
+              'Get your free credit report before paying R250 for one',
+            ].map((text, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                <div style={{
+                  marginTop: 2,
+                  width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                  background: 'var(--gold-soft)',
+                  border: '1px solid var(--gold-border)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, color: 'var(--gold-text)', fontWeight: 700,
+                }}>✓</div>
+                <span style={{
+                  fontSize: 13,
+                  lineHeight: 1.55,
+                  color: 'var(--text-secondary)',
+                }}>
+                  {text}
                 </span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* WHAT TO EXPECT */}
+        {/* How it works */}
         <div className="card">
-          <p
-            className="text-[11px] font-medium uppercase tracking-[0.14em]"
-            style={{ color: 'var(--text-muted)' }}
-          >
-            What to expect
-          </p>
+          <p className="label">How it works</p>
 
-          <div className="mt-4 flex flex-col gap-3">
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
             {[
               {
                 step: '01',
-                label: 'Tell us about your situation',
-                sub: 'A few simple questions — no forms',
+                label: 'Add the properties you are considering',
+                sub:   'Paste a listing link or enter the details manually',
               },
               {
                 step: '02',
-                label: 'Add a property you\'re looking at',
-                sub: 'Paste a link or enter the details',
+                label: 'Tell us about your rental situation',
+                sub:   'Income, history, readiness — a few quick questions',
               },
               {
                 step: '03',
-                label: 'Get your rental strategy',
-                sub: 'Personalised to your situation',
+                label: 'Get your personalised rental strategy',
+                sub:   'Specific to your profile and your target properties',
               },
             ].map((item, i) => (
-              <div key={i} className="flex items-start gap-4">
-                <div
-                  className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-xl text-[11px] font-600"
-                  style={{
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid var(--border-soft)',
-                    color: 'var(--text-muted)',
-                    fontWeight: 600,
-                  }}
-                >
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: 10, flexShrink: 0,
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid var(--border-soft)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+                }}>
                   {item.step}
                 </div>
                 <div>
-                  <p
-                    className="text-[13px] font-medium leading-[1.4]"
-                    style={{ color: 'var(--text-primary)' }}
-                  >
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.4 }}>
                     {item.label}
                   </p>
-                  <p
-                    className="mt-0.5 text-[12px]"
-                    style={{ color: 'var(--text-muted)' }}
-                  >
+                  <p style={{ marginTop: 3, fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                     {item.sub}
                   </p>
                 </div>
@@ -157,22 +167,37 @@ export default function LandingPage() {
           </div>
         </div>
 
+        {/* Social proof / trust */}
+        <div className="card-inner" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            { icon: '🔒', text: 'No account required — nothing is stored on our servers' },
+            { icon: '🇿🇦', text: 'Built specifically for the South African rental market' },
+            { icon: '⚡', text: 'Takes about 3 minutes to complete' },
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{item.icon}</span>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.55 }}>{item.text}</p>
+            </div>
+          ))}
+        </div>
+
       </div>
 
-      {/* BOTTOM CTA — stays near the bottom */}
-      <div className="flex flex-col gap-3 pb-6">
+      {/* ── Bottom CTA ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 32 }}>
         <button
           className="btn-primary"
-          onClick={() => router.push('/profile')}
+          onClick={() => router.push('/check')}
         >
-          Get Started
+          Get Started — it's free
         </button>
 
-        <p
-          className="text-center text-[11px]"
-          style={{ color: 'var(--text-muted)' }}
-        >
-          Free to use · No account required · South Africa
+        <p style={{
+          textAlign: 'center',
+          fontSize: 11,
+          color: 'var(--text-muted)',
+        }}>
+          Free during beta · No account · South Africa
         </p>
       </div>
 

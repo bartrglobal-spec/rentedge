@@ -691,3 +691,11 @@ textarea.input {
   clip: rect(0, 0, 0, 0);
   border: 0;
 }
+
+/* =========================================================
+   TAB SCROLL BAR — hide scrollbar, keep touch scroll
+========================================================= */
+
+.tab-scroll-bar::-webkit-scrollbar {
+  display: none;
+}

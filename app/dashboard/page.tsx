@@ -10,6 +10,11 @@ type Property = {
   area: string
   rent: number
   bedrooms: number
+  label?: string
+}
+
+function toInput(p: Property): any {
+  return { ...p, label: p.label || p.area || p.title || 'Property', location: p.area }
 }
 
 function cleanTitle(value?: string) {
@@ -130,13 +135,13 @@ export default function DashboardPage() {
       referencesReady: profile.referenceAvailability === 'Available',
       guarantorAvailable: profile.guarantorSupport === 'Yes',
       evictionHistory: 'none' as string,
-      pets:            'none' as string,
+      pets:            false,
     }
   }, [profile])
 
   const evaluation = useMemo(() => {
     if (!renterProfile || !selectedProperty) return null
-    try { return evaluateProperty(renterProfile, selectedProperty) }
+    try { return evaluateProperty(renterProfile, toInput(selectedProperty)) }
     catch { return null }
   }, [renterProfile, selectedProperty])
 
