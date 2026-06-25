@@ -10,18 +10,28 @@ export default function LandingPage() {
   useEffect(() => {
     setMounted(true)
 
-    // Returning user who completed the full flow → dashboard
-    const profileComplete =
-      localStorage.getItem('rentedge_profile_complete') === 'true'
-    if (profileComplete) {
-      router.replace('/dashboard')
-      return
-    }
+    // Only auto-redirect on first load — not when user explicitly taps Home
+    // Check if this is a deliberate navigation by looking at navigation type
+    // If user came here via the nav (not a fresh load), don't redirect
+    const navEntry = performance?.getEntriesByType?.('navigation')?.[0] as PerformanceNavigationTiming | undefined
+    const isReload = navEntry?.type === 'reload'
+    const isBackForward = navEntry?.type === 'back_forward'
+    const isFreshLoad = !navEntry || navEntry.type === 'navigate'
 
-    // Returning user who added properties but not finished → check
-    const properties = localStorage.getItem('rentedge_properties')
-    if (properties && properties !== '[]') {
-      router.replace('/check')
+    // Only redirect on fresh page loads, not deliberate nav taps
+    if (isFreshLoad && !isReload && !isBackForward) {
+      const profileComplete =
+        localStorage.getItem('rentedge_profile_complete') === 'true'
+      if (profileComplete) {
+        router.replace('/dashboard')
+        return
+      }
+
+      // Returning user who started but didn't finish → pick up where they left off
+      const properties = localStorage.getItem('rentedge_properties')
+      if (properties && properties !== '[]') {
+        router.replace('/check')
+      }
     }
   }, [router])
 

@@ -194,12 +194,37 @@ export default function UnlockPage() {
   // ── Run all engines ───────────────────────────────────
   const renter     = buildRenterProfile(profile)
 
-  // Map our Property shape to PropertyInput (adds required label field)
-  const toPropertyInput = (p: Property) => ({
-    ...p,
-    label: p.label || p.area || p.title || 'Property',
-    location: p.location || p.area || '',
-  })
+  // Map Property → PropertyInput
+  // Cleans scraped titles and separates title from location
+  // to prevent buildIntroduction duplicating them
+  const toPropertyInput = (p: Property) => {
+    const rawTitle = p.title || ''
+    // Remove site names, IDs, prices, "to rent" etc from scraped titles
+    const cleanTitle = rawTitle
+      .replace(/property24/gi, '')
+      .replace(/\|.*$/, '')
+      .replace(/-?\s*p\d+.*$/i, '')
+      .replace(/to rent/gi, '')
+      .replace(/for rent/gi, '')
+      .replace(/r\s?\d[\d\s,]*/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim()
+
+    const area = p.area || ''
+
+    // If the cleaned title already contains the area name, don't set location
+    // — prevents "I came across X in X" duplication in the intro message
+    const titleContainsArea = area.length > 3 &&
+      cleanTitle.toLowerCase().includes(area.toLowerCase())
+
+    return {
+      ...p,
+      label: cleanTitle || area || 'Property',
+      title: cleanTitle,
+      location: titleContainsArea ? '' : area,
+      bedrooms: Number(p.bedrooms) || 0,
+    }
+  }
 
   const selectedInput  = toPropertyInput(selectedProperty)
   const propertiesInput = properties.map(toPropertyInput)

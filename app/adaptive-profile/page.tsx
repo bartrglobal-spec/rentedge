@@ -46,6 +46,7 @@ export default function AdaptiveProfilePage() {
   const [properties, setProperties] = useState<Property[]>([])
   const [answers, setAnswers] = useState<ProfileAnswers>(EMPTY_ANSWERS)
   const [editingField, setEditingField] = useState<string | null>(null)
+  const [incomeBuffer, setIncomeBuffer] = useState('')
 
   useEffect(() => {
     const savedProperties = JSON.parse(localStorage.getItem('rentedge_properties') || '[]')
@@ -99,7 +100,16 @@ export default function AdaptiveProfilePage() {
   const updateAnswer = (field: keyof ProfileAnswers, value: any) => {
     setAnswers(prev => ({ ...prev, [field]: value }))
     setEditingField(null)
+    // Reset income buffer after confirming
+    if (field === 'monthlyIncome') setIncomeBuffer('')
   }
+
+  // Pre-fill income buffer when editing an existing answer
+  useEffect(() => {
+    if (editingField === 'monthlyIncome' && answers.monthlyIncome) {
+      setIncomeBuffer(answers.monthlyIncome)
+    }
+  }, [editingField])
 
   // KEY FIX: Map employmentStability to format evaluateProperty can read
   // evaluateProperty uses normalizeText().includes("2+") — "More than 2 years" does NOT match
@@ -215,11 +225,29 @@ export default function AdaptiveProfilePage() {
 
           {currentQuestion === 'monthlyIncome' && (<>
             <p className="section-title">What is your average monthly income before deductions?</p>
-            <input value={answers.monthlyIncome} onChange={e => setAnswers(p => ({ ...p, monthlyIncome: e.target.value }))}
-              placeholder="e.g. 25000" className="input" inputMode="numeric" style={{ marginTop: 14 }} />
-            <button onClick={() => updateAnswer('monthlyIncome', answers.monthlyIncome)} className="btn-primary"
-              style={{ marginTop: 10, opacity: !answers.monthlyIncome ? 0.4 : 1 }} disabled={!answers.monthlyIncome}>
-              Continue
+            <p className="section-subtitle" style={{ marginTop: 4 }}>
+              Enter your gross monthly amount. We use this to check the 3x income rule agents apply.
+            </p>
+            <input
+              value={incomeBuffer}
+              onChange={e => setIncomeBuffer(e.target.value.replace(/[^0-9]/g, ''))}
+              placeholder="e.g. 25000"
+              className="input"
+              inputMode="numeric"
+              style={{ marginTop: 14 }}
+            />
+            {incomeBuffer ? (
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 6 }}>
+                = R{Number(incomeBuffer).toLocaleString()} per month
+              </p>
+            ) : null}
+            <button
+              onClick={() => { if (incomeBuffer) updateAnswer('monthlyIncome', incomeBuffer) }}
+              className="btn-primary"
+              style={{ marginTop: 10, opacity: !incomeBuffer ? 0.4 : 1 }}
+              disabled={!incomeBuffer}
+            >
+              Confirm income
             </button>
           </>)}
 
@@ -289,7 +317,7 @@ export default function AdaptiveProfilePage() {
           {currentQuestion === 'documentationGaps' && (<>
             <p className="section-title">Which documents could be difficult to provide?</p>
             <p className="section-subtitle" style={{ marginTop: 4 }}>
-              Select all that apply. If you have everything ready, tap the option at the bottom.
+              Select all that apply. Tap Continue when done.
             </p>
             <div className="section-gap" style={{ marginTop: 14 }}>
               {['Payslips','Bank Statements','Employment Confirmation','Landlord Reference','ID Document'].map(option => {
@@ -302,7 +330,7 @@ export default function AdaptiveProfilePage() {
                       return
                     }
                     const next = selected
-                      ? answers.documentationGaps.filter(i => i !== option)
+                      ? answers.documentationGaps.filter((i: string) => i !== option)
                       : [...answers.documentationGaps, option]
                     setAnswers(p => ({ ...p, documentationGaps: next }))
                   }} />
